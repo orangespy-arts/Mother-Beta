@@ -4,8 +4,332 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>3 Toys Everywhere</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background: #f6f7fb;
+      }
+
+      .next {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        font-size: 28px;
+        text-decoration: none;
+        color: #222;
+        z-index: 20;
+      }
+
+      .next.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .status {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 20;
+        font-size: 16px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 8px 12px;
+        border-radius: 10px;
+      }
+
+      .basket {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(62vw, 500px);
+        height: min(45vh, 320px);
+        border: 3px dashed #6b7280;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.75);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-auto-rows: 56px;
+        gap: 8px;
+        padding: 12px;
+        align-content: start;
+        z-index: 5;
+      }
+
+      .basket-label {
+        position: absolute;
+        top: -28px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #f6f7fb;
+        padding: 2px 10px;
+        font-size: 14px;
+        color: #374151;
+        border-radius: 999px;
+      }
+
+      .toy {
+        position: fixed;
+        width: 52px;
+        height: 52px;
+        border: 0;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+        font-size: 30px;
+        line-height: 52px;
+        text-align: center;
+        cursor: grab;
+        user-select: none;
+        touch-action: none;
+        z-index: 10;
+      }
+
+      .toy.dragging {
+        cursor: grabbing;
+        transform: scale(1.05);
+        z-index: 30;
+      }
+
+      .toy.in-basket {
+        position: static;
+        width: 100%;
+        height: 56px;
+        line-height: 56px;
+        box-shadow: none;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+      }
+
+      .frustration {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        transform: translateX(-50%);
+        width: min(90vw, 760px);
+        text-align: center;
+        font-size: 20px;
+        line-height: 1.4;
+        color: #111827;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 14px 18px;
+        opacity: 0;
+        transition: opacity 400ms ease;
+        z-index: 25;
+      }
+
+      .frustration.show {
+        opacity: 1;
+      }
+    </style>
   </head>
   <body>
-    <a href="4-accumulated-frustration.html" aria-label="next">▶</a>
+    <div class="status" id="status">Toys in basket: 0</div>
+
+    <div class="basket" id="basket" aria-label="basket">
+      <div class="basket-label">Drop toys here</div>
+    </div>
+
+    <div class="frustration" id="frustration">
+      Motherhood is complicated and repetitive. It was never meant to be easy.
+    </div>
+
+    <a class="next hidden" id="next" href="5-ai-child-dialogue.html" aria-label="next">▶</a>
+
+    <script>
+      const toyIcons = ["🧸", "🚗", "🪀", "🧩", "🦖", "🪁", "🪇", "🐰", "🐤", "🎈", "🏀", "🛴"];
+      const basket = document.getElementById("basket");
+      const statusText = document.getElementById("status");
+      const frustrationText = document.getElementById("frustration");
+      const nextLink = document.getElementById("next");
+      const toys = [];
+      const stageStartAt = Date.now();
+      let totalDrops = 0;
+      let popOutCount = 0;
+      let frustrationShown = false;
+
+      function randomBetween(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function updateStatus() {
+        const inBasketCount = toys.filter((toy) => toy.dataset.inBasket === "1").length;
+        statusText.textContent = `Toys in basket: ${inBasketCount}`;
+      }
+
+      function maybeShowFrustration() {
+        if (frustrationShown) {
+          return;
+        }
+
+        const elapsedMs = Date.now() - stageStartAt;
+        if (elapsedMs < 9000) {
+          return;
+        }
+
+        if (totalDrops >= 8 && popOutCount >= 3) {
+          frustrationShown = true;
+          frustrationText.classList.add("show");
+          nextLink.classList.remove("hidden");
+        }
+      }
+
+      function placeToys() {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        toyIcons.forEach((icon, index) => {
+          const toy = document.createElement("button");
+          toy.className = "toy";
+          toy.type = "button";
+          toy.textContent = icon;
+          toy.dataset.id = String(index);
+          toy.dataset.inBasket = "0";
+
+          const x = randomBetween(10, Math.max(10, viewportWidth - 70));
+          const y = randomBetween(80, Math.max(80, viewportHeight - 70));
+          toy.style.left = `${x}px`;
+          toy.style.top = `${y}px`;
+
+          enableDrag(toy);
+          document.body.appendChild(toy);
+          toys.push(toy);
+        });
+      }
+
+      function moveToRandomOutsideBasket(toy) {
+        const basketRect = basket.getBoundingClientRect();
+        let x = 10;
+        let y = 80;
+        let tries = 0;
+
+        do {
+          x = randomBetween(10, Math.max(10, window.innerWidth - 70));
+          y = randomBetween(80, Math.max(80, window.innerHeight - 70));
+          tries += 1;
+        } while (
+          x + 52 > basketRect.left &&
+          x < basketRect.right &&
+          y + 52 > basketRect.top &&
+          y < basketRect.bottom &&
+          tries < 50
+        );
+
+        toy.style.left = `${x}px`;
+        toy.style.top = `${y}px`;
+      }
+
+      function isInsideBasket(rect) {
+        const basketRect = basket.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        return (
+          centerX >= basketRect.left &&
+          centerX <= basketRect.right &&
+          centerY >= basketRect.top &&
+          centerY <= basketRect.bottom
+        );
+      }
+
+      function putIntoBasket(toy) {
+        toy.dataset.inBasket = "1";
+        toy.classList.add("in-basket");
+        basket.appendChild(toy);
+        totalDrops += 1;
+        updateStatus();
+        maybeShowFrustration();
+      }
+
+      function popOutOneToy() {
+        const inBasket = toys.filter((toy) => toy.dataset.inBasket === "1");
+        if (!inBasket.length) {
+          return;
+        }
+
+        const toy = inBasket[Math.floor(Math.random() * inBasket.length)];
+        toy.dataset.inBasket = "0";
+        toy.classList.remove("in-basket");
+        document.body.appendChild(toy);
+        moveToRandomOutsideBasket(toy);
+        popOutCount += 1;
+        updateStatus();
+        maybeShowFrustration();
+      }
+
+      function enableDrag(toy) {
+        let dragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        toy.addEventListener("pointerdown", (event) => {
+          if (toy.dataset.inBasket === "1") {
+            toy.dataset.inBasket = "0";
+            toy.classList.remove("in-basket");
+            document.body.appendChild(toy);
+            const currentRect = toy.getBoundingClientRect();
+            toy.style.left = `${currentRect.left}px`;
+            toy.style.top = `${currentRect.top}px`;
+            updateStatus();
+          }
+
+          dragging = true;
+          toy.setPointerCapture(event.pointerId);
+          toy.classList.add("dragging");
+          const rect = toy.getBoundingClientRect();
+          offsetX = event.clientX - rect.left;
+          offsetY = event.clientY - rect.top;
+        });
+
+        toy.addEventListener("pointermove", (event) => {
+          if (!dragging) {
+            return;
+          }
+
+          toy.style.left = `${event.clientX - offsetX}px`;
+          toy.style.top = `${event.clientY - offsetY}px`;
+        });
+
+        toy.addEventListener("pointerup", (event) => {
+          if (!dragging) {
+            return;
+          }
+
+          dragging = false;
+          toy.releasePointerCapture(event.pointerId);
+          toy.classList.remove("dragging");
+
+          const rect = toy.getBoundingClientRect();
+          if (isInsideBasket(rect)) {
+            putIntoBasket(toy);
+          }
+        });
+      }
+
+      placeToys();
+      updateStatus();
+
+      setInterval(() => {
+        popOutOneToy();
+      }, 3200);
+
+      window.addEventListener("resize", () => {
+        toys.forEach((toy) => {
+          if (toy.dataset.inBasket === "0") {
+            const rect = toy.getBoundingClientRect();
+            if (rect.right > window.innerWidth || rect.bottom > window.innerHeight) {
+              moveToRandomOutsideBasket(toy);
+            }
+          }
+        });
+      });
+    </script>
   </body>
 </html>
