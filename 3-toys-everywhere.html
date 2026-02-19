@@ -82,13 +82,18 @@
         border-radius: 12px;
         background: #fff;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-        font-size: 30px;
-        line-height: 52px;
-        text-align: center;
         cursor: grab;
         user-select: none;
         touch-action: none;
         z-index: 10;
+        padding: 4px;
+        object-fit: contain;
+      }
+
+      .toy img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
       }
 
       .toy.dragging {
@@ -144,7 +149,34 @@
     <a class="next hidden" id="next" href="5-ai-child-dialogue.html" aria-label="next">▶</a>
 
     <script>
-      const toyIcons = ["🧸", "🚗", "🪀", "🧩", "🦖", "🪁", "🪇", "🐰", "🐤", "🎈", "🏀", "🛴"];
+      const toyPaths = [
+        "Page3-Image/Asset 1.png",
+        "Page3-Image/Asset 2.png",
+        "Page3-Image/Asset 3.png",
+        "Page3-Image/Asset 4.png",
+        "Page3-Image/Asset 5.png",
+        "Page3-Image/Asset 6.png",
+        "Page3-Image/Asset 7.png",
+        "Page3-Image/Asset 8.png",
+        "Page3-Image/Asset 9.png",
+        "Page3-Image/Asset 10.png",
+        "Page3-Image/Asset 11.png",
+        "Page3-Image/Asset 12.png",
+        "Page3-Image/Asset 13.png",
+        "Page3-Image/Asset 14.png",
+        "Page3-Image/Asset 15.png",
+        "Page3-Image/Asset 16.png",
+        "Page3-Image/Asset 17.png",
+        "Page3-Image/Asset 18.png",
+        "Page3-Image/Asset 19.png",
+        "Page3-Image/Asset 20.png",
+        "Page3-Image/Asset 21.png",
+        "Page3-Image/Asset 22.png",
+        "Page3-Image/Asset 23.png",
+        "Page3-Image/Asset 24.png",
+        "Page3-Image/Asset 25.png",
+        "Page3-Image/Asset 26.png"
+      ];
       const basket = document.getElementById("basket");
       const statusText = document.getElementById("status");
       const frustrationText = document.getElementById("frustration");
@@ -185,11 +217,14 @@
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
 
-        toyIcons.forEach((icon, index) => {
+        toyPaths.forEach((path, index) => {
           const toy = document.createElement("button");
           toy.className = "toy";
           toy.type = "button";
-          toy.textContent = icon;
+          const img = document.createElement("img");
+          img.src = path;
+          img.alt = `Toy ${index + 1}`;
+          toy.appendChild(img);
           toy.dataset.id = String(index);
           toy.dataset.inBasket = "0";
 
