@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mother-Beta: Page 1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .scene {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .scene.active {
+            opacity: 1;
+        }
+
+        /* Scene 1: Page 1 */
+        #scene1 {
+            background-image: url('Page1-Image/background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .button-container {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            cursor: pointer;
+            animation: buttonPulse 2s ease-in-out infinite;
+        }
+
+        .button-container:hover {
+            animation: none;
+            transform: translateX(-50%) scale(1.15);
+            transition: transform 0.3s ease;
+        }
+
+        .button-container:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        .button-img {
+            width: auto;
+            height: 180px;
+            display: block;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+        }
+
+        @keyframes buttonPulse {
+            0%, 100% {
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                transform: translateX(-50%) scale(1.08);
+            }
+        }
+
+        /* Scene 2: Page 2 */
+        #scene2 {
+            background: transparent;
+        }
+
+        .p2-image {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+            z-index: 15;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 2px solid white;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 20;
+        }
+
+        .back-button:hover {
+            background: rgba(0, 0, 0, 0.7);
+            transform: scale(1.1);
+        }
+
+        .back-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Fade animation for scene transitions */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Scene 1: Page 1 with background and button -->
+    <div id="scene1" class="scene active">
+        <div class="button-container" id="triggerButton">
+            <img src="Page1-Image/button.png" alt="Trigger Button" class="button-img">
+        </div>
+    </div>
+
+    <!-- Scene 2: Page 2 -->
+    <div id="scene2" class="scene">
+        <img src="Page1-Image/p2.png" alt="Page 2" class="p2-image">
+        <button class="back-button" id="backButton">← Back</button>
+    </div>
+
+    <script>
+        const scene1 = document.getElementById('scene1');
+        const scene2 = document.getElementById('scene2');
+        const triggerButton = document.getElementById('triggerButton');
+        const backButton = document.getElementById('backButton');
+
+        // 点击按钮从场景1跳转到场景2
+        triggerButton.addEventListener('click', () => {
+            scene1.classList.remove('active');
+            scene2.classList.add('active');
+        });
+
+        // 点击返回按钮从场景2回到场景1
+        backButton.addEventListener('click', () => {
+            scene2.classList.remove('active');
+            scene1.classList.add('active');
+        });
+
+        // 可选：添加键盘支持（Escape 返回）
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && scene2.classList.contains('active')) {
+                backButton.click();
+            }
+        });
+    </script>
+</body>
+</html>
