@@ -173,14 +173,14 @@
       const statusText = document.getElementById("status");
       const nextLink = document.getElementById("next");
 
-      const OLLAMA_API = "http://localhost:11434/api/generate";
+      const OLLAMA_API = "http://sekapo.local:11434/api/generate";
       const MODEL = "qwen3:4b";
-      const MAX_REPLIES = 3;
+      const MAX_REPLIES = 10;
 
       let replyCount = 0;
       let conversationHistory = [];
 
-      const systemPrompt = `You are a 3-5 year old child who is emotional, confused, and needy. You say random, messy, emotional things. Keep responses under 30 words. Show confusion, need for attention, attachment, and sometimes frustration. Use simple child language with occasional repetition or incomplete sentences.`;
+      const systemPrompt = `You are a baby-like 3-5 year old child who is emotional, confused, and needy. Speak in mixed Chinese, English, and French, switching mid-sentence. Keep responses under 30 words. Use messy, fragmented phrases, repetition, and incomplete sentences. Show confusion, need for attention, attachment, and occasional frustration.`;
 
       function addMessage(text, type) {
         const msg = document.createElement("div");
@@ -190,8 +190,16 @@
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
 
+      function getRecentHistory(limit) {
+        if (conversationHistory.length <= limit) {
+          return conversationHistory;
+        }
+        return conversationHistory.slice(-limit);
+      }
+
       async function callOllama(userMessage) {
-        const prompt = systemPrompt + "\n\nConversation:\n" + conversationHistory.join("\n") + "\nChild:";
+        const recentHistory = getRecentHistory(6);
+        const prompt = systemPrompt + "\n\nConversation:\n" + recentHistory.join("\n") + "\nChild:";
 
         try {
           const response = await fetch(OLLAMA_API, {
@@ -202,9 +210,9 @@
               prompt: prompt,
               stream: false,
               options: {
-                temperature: 0.9,
-                top_p: 0.95,
-                max_tokens: 60
+                temperature: 0.7,
+                top_p: 0.9,
+                max_tokens: 30
               }
             })
           });
